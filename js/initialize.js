@@ -1,3 +1,3 @@
 function initialize() {
-    alert("Button works!");
+    document.getElementById("statusWindow").valu = "js code reached";
 }
