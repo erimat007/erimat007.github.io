@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Elo Screen Resolution</title>
+    <title>Elo Screen Resolution Test</title>
 
     <style>
         body {
@@ -19,28 +19,60 @@
             width: 300px;
             padding: 8px;
         }
+
+        .status {
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
-    <button onclick="getScreenResolution()">
+    <div id="status" class="status">Initializing...</div>
+
+    <button id="btnGetResolution" disabled>
         Get Screen Resolution
     </button>
 
-    <br>
+    <br><br>
 
     <input type="text" id="result" readonly>
 
     <script>
-        function getScreenResolution() {
+
+        window.onload = function () {
             try {
-                document.getElementById("result").value =
-                    EloPeripheralManager.getScreenResolution();
+                EloPeripheralManager.initialize("onPeripheralManagerReady");
             } catch (e) {
-                document.getElementById("result").value =
-                    "Error: " + e.message;
+                document.getElementById("status").innerHTML =
+                    "EloPeripheralManager not available: " + e.message;
+            }
+        };
+
+        function onPeripheralManagerReady(serviceBound) {
+
+            document.getElementById("status").innerHTML =
+                "Peripheral Manager Ready: " + serviceBound;
+
+            if (serviceBound === "true") {
+                document.getElementById("btnGetResolution").disabled = false;
             }
         }
+
+        document.getElementById("btnGetResolution")
+            .addEventListener("click", function () {
+
+                try {
+                    var resolution =
+                        EloPeripheralManager.getScreenResolution();
+
+                    document.getElementById("result").value = resolution;
+                } catch (e) {
+                    document.getElementById("result").value =
+                        "Error: " + e.message;
+                }
+            });
+
     </script>
 
 </body>
