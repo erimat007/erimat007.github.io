@@ -12,66 +12,87 @@
 
         button {
             padding: 10px 20px;
-            margin-bottom: 10px;
-        }
-
-        input {
-            width: 300px;
-            padding: 8px;
-        }
-
-        .status {
             margin-bottom: 15px;
-            font-weight: bold;
+        }
+
+        #log {
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            padding: 10px;
+            height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
         }
     </style>
 </head>
 <body>
 
-    <div id="status" class="status">Initializing...</div>
+    <h2>Elo Screen Resolution Test</h2>
 
-    <button id="btnGetResolution" disabled>
+    <button id="btnResolution" disabled>
         Get Screen Resolution
     </button>
 
-    <br><br>
+    <button onclick="clearLog()">
+        Clear Log
+    </button>
 
-    <input type="text" id="result" readonly>
+    <h3>Status</h3>
+    <div id="log"></div>
 
     <script>
 
+        function log(message) {
+            const logWindow = document.getElementById("log");
+            const timestamp = new Date().toLocaleTimeString();
+
+            logWindow.innerHTML += "[" + timestamp + "] " + message + "<br>";
+            logWindow.scrollTop = logWindow.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById("log").innerHTML = "";
+        }
+
         window.onload = function () {
+
+            log("Page loaded");
+            log("Initializing EloPeripheralManager...");
+
             try {
                 EloPeripheralManager.initialize("onPeripheralManagerReady");
             } catch (e) {
-                document.getElementById("status").innerHTML =
-                    "EloPeripheralManager not available: " + e.message;
+                log("Initialization failed: " + e.message);
             }
         };
 
         function onPeripheralManagerReady(serviceBound) {
 
-            document.getElementById("status").innerHTML =
-                "Peripheral Manager Ready: " + serviceBound;
+            log("onPeripheralManagerReady called");
+            log("serviceBound = " + serviceBound);
 
             if (serviceBound === "true") {
-                document.getElementById("btnGetResolution").disabled = false;
+                document.getElementById("btnResolution").disabled = false;
+                log("Peripheral Manager connected");
+            } else {
+                log("Peripheral Manager not connected");
             }
         }
 
-        document.getElementById("btnGetResolution")
-            .addEventListener("click", function () {
+        document.getElementById("btnResolution").addEventListener("click", function () {
 
-                try {
-                    var resolution =
-                        EloPeripheralManager.getScreenResolution();
+            log("Get Screen Resolution clicked");
 
-                    document.getElementById("result").value = resolution;
-                } catch (e) {
-                    document.getElementById("result").value =
-                        "Error: " + e.message;
-                }
-            });
+            try {
+                var resolution = EloPeripheralManager.getScreenResolution();
+
+                log("Resolution: " + resolution);
+            }
+            catch (e) {
+                log("Error: " + e.message);
+            }
+        });
 
     </script>
 
