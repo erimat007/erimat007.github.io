@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Elo Screen Resolution</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-bottom: 10px;
+        }
+
+        input {
+            width: 300px;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <button onclick="getScreenResolution()">
+        Get Screen Resolution
+    </button>
+
+    <br>
+
+    <input type="text" id="result" readonly>
+
+    <script>
+        function getScreenResolution() {
+            try {
+                document.getElementById("result").value =
+                    EloPeripheralManager.getScreenResolution();
+            } catch (e) {
+                document.getElementById("result").value =
+                    "Error: " + e.message;
+            }
+        }
+    </script>
+
+</body>
+</html>
