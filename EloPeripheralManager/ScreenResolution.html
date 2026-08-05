@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PeripheralManager - Screen Resolution</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+        }
+
+        input {
+            padding: 6px;
+            width: 120px;
+            margin-right: 5px;
+        }
+
+        #log {
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Elo Screen Resolution Test</h2>
+
+    <div>
+        <button id="btnGet" disabled>
+            Get Resolution
+        </button>
+    </div>
+
+    <div style="margin-top:10px;">
+        Width:
+        <input type="number" id="width" value="1920">
+
+        Height:
+        <input type="number" id="height" value="1080">
+
+        <button id="btnSet" disabled>
+            Set Resolution
+        </button>
+    </div>
+
+    <div style="margin-top:10px;">
+        <button id="btnClear" disabled>
+            Clear Resolution
+        </button>
+
+        <button onclick="clearLog()">
+            Clear Log
+        </button>
+    </div>
+
+    <h3>Status</h3>
+
+    <div id="log"></div>
+
+    <script>
+
+        function log(message) {
+            const logWindow = document.getElementById("log");
+            const ts = new Date().toLocaleTimeString();
+
+            logWindow.innerHTML += "[" + ts + "] " + message + "<br>";
+            logWindow.scrollTop = logWindow.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById("log").innerHTML = "";
+        }
+
+        function enableButtons() {
+            document.getElementById("btnGet").disabled = false;
+            document.getElementById("btnSet").disabled = false;
+            document.getElementById("btnClear").disabled = false;
+        }
+
+        window.onload = function () {
+
+            log("Page loaded");
+
+            log("typeof EloPeripheralManager = "
+                + typeof EloPeripheralManager);
+
+            try {
+                log("Initializing EloPeripheralManager...");
+                EloPeripheralManager.initialize(
+                    "onPeripheralManagerReady"
+                );
+            }
+            catch (e) {
+                log("Initialize failed: " + e.message);
+            }
+        };
+
+        function onPeripheralManagerReady(serviceBound) {
+
+            log("onPeripheralManagerReady()");
+            log("serviceBound = " + serviceBound);
+
+            if (serviceBound === "true") {
+                log("Peripheral Manager connected");
+                enableButtons();
+            }
+            else {
+                log("Peripheral Manager NOT connected");
+            }
+        }
+
+        document.getElementById("btnGet")
+            .addEventListener("click", function () {
+
+                try {
+
+                    log("Calling getScreenResolution()");
+
+                    var resolution =
+                        EloPeripheralManager.getScreenResolution();
+
+                    log("Current Resolution = " + resolution);
+                }
+                catch (e) {
+                    log("GET ERROR: " + e.message);
+                }
+            });
+
+        document.getElementById("btnSet")
+            .addEventListener("click", function () {
+
+                try {
+
+                    var width =
+                        parseInt(document.getElementById("width").value);
+
+                    var height =
+                        parseInt(document.getElementById("height").value);
+
+                    log("Calling setScreenResolution("
+                        + width + ", " + height + ")");
+
+                    var result =
+                        EloPeripheralManager.setScreenResolution(
+                            width,
+                            height
+                        );
+
+                    log("Set Result = " + result);
+                }
+                catch (e) {
+                    log("SET ERROR: " + e.message);
+                }
+            });
+
+        document.getElementById("btnClear")
+            .addEventListener("click", function () {
+
+                try {
+
+                    log("Calling clearScreenResolution()");
+
+                    EloPeripheralManager.clearScreenResolution();
+
+                    log("Resolution reset to device default");
+                }
+                catch (e) {
+                    log("CLEAR ERROR: " + e.message);
+                }
+            });
+
+    </script>
+
+</body>
+</html>
