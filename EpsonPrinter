@@ -1,1 +1,420 @@
+<!-- Erik Mathues  -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epson Printer Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
 
+        h2 {
+            margin-top: 0;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 4px;
+        }
+
+        #printerAvailable {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: red;
+        }
+
+        #log {
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h2>Elo Epson Printer Test</h2>
+
+    <div id="printerAvailable">
+        Printer Disconnected
+    </div>
+
+    <label>Printer List / Barcode Value</label>
+    <input
+        type="text"
+        id="textField"
+        placeholder="Printer list or barcode">
+
+    <h3>Printer Management</h3>
+
+    <button onclick="updatePrinterList()">Update Printer List</button>
+    <button onclick="queryPrinterList()">Query Printer List</button>
+    <button onclick="connectPrinter()">Connect First Printer</button>
+    <button onclick="disconnectPrinter()">Disconnect</button>
+    <button onclick="checkAvailablePrinters()">Status</button>
+
+    <hr>
+
+    <h3>Printing</h3>
+
+    <button onclick="printBarcode()">Print Barcode</button>
+    <button onclick="printDemoReceipt()">Print Demo Receipt</button>
+    <button onclick="printImage()">Print Logo</button>
+    <button onclick="checkPrinterPaper()">Check Paper</button>
+
+    <hr>
+
+    <h3>Log</h3>
+
+    <textarea id="log" readonly></textarea>
+
+</div>
+
+<script>
+
+function writeLog(message) {
+
+    const logArea = document.getElementById('log');
+
+    logArea.value +=
+        new Date().toLocaleTimeString() +
+        ' - ' +
+        message +
+        '\n';
+
+    logArea.scrollTop = logArea.scrollHeight;
+}
+
+window.onload = function () {
+
+    try {
+
+        writeLog('Initializing Epson Manager');
+
+        EloEpsonPrinterManager.initialize(
+            'onEpsonReady'
+        );
+
+    } catch (ex) {
+
+        writeLog(
+            'Initialization Error: ' + ex
+        );
+    }
+};
+
+function onEpsonReady(serviceBound) {
+
+    writeLog(
+        'onEpsonReady = ' + serviceBound
+    );
+
+    if (serviceBound === 'true') {
+
+        queryPrinterList();
+        checkAvailablePrinters();
+    }
+}
+
+function updatePrinterList() {
+
+    try {
+
+        const result =
+            EloEpsonPrinterManager
+                .updatePrinterList();
+
+        writeLog(
+            'Update Result = ' + result
+        );
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+function queryPrinterList() {
+
+    try {
+
+        const printers =
+            EloEpsonPrinterManager
+                .queryPrinterList();
+
+        document.getElementById(
+            'textField'
+        ).value = printers;
+
+        writeLog(
+            'Printers = ' + printers
+        );
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+function connectPrinter() {
+
+    try {
+
+        let target =
+            document.getElementById(
+                'textField'
+            ).value;
+
+        if (
+            target.length > 1 &&
+            target.charAt(0) === '[' &&
+            target.charAt(target.length - 1) === ']'
+        ) {
+
+            target =
+                target
+                    .slice(1, -1)
+                    .split(',')[0]
+                    .trim();
+        }
+
+        writeLog(
+            'Connecting to ' + target
+        );
+
+        const result =
+            EloEpsonPrinterManager
+                .connectPrinter(target);
+
+        writeLog(
+            'Connect Result = ' + result
+        );
+
+        checkAvailablePrinters();
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+function disconnectPrinter() {
+
+    try {
+
+        const result =
+            EloEpsonPrinterManager
+                .disconnectPrinter();
+
+        writeLog(
+            'Disconnect Result = ' + result
+        );
+
+        checkAvailablePrinters();
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+function checkAvailablePrinters() {
+
+    try {
+
+        const connected =
+            EloEpsonPrinterManager
+                .isPrinterConnected();
+
+        const status =
+            document.getElementById(
+                'printerAvailable'
+            );
+
+        if (connected) {
+
+            status.innerHTML =
+                'Printer Connected';
+
+            status.style.color =
+                'green';
+
+        } else {
+
+            status.innerHTML =
+                'Printer Disconnected';
+
+            status.style.color =
+                'red';
+        }
+
+        writeLog(
+            'Connected = ' + connected
+        );
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+function printBarcode() {
+
+    try {
+
+        let barcode =
+            document.getElementById(
+                'textField'
+            ).value;
+
+        if (
+            !barcode ||
+            barcode === 'true' ||
+            barcode === 'false'
+        ) {
+            barcode = '1234567890';
+        }
+
+        const result =
+            EloEpsonPrinterManager
+                .printBarcode(barcode);
+
+        writeLog(
+            'Barcode Result = ' + result
+        );
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+function printDemoReceipt() {
+
+    try {
+
+        EloEpsonPrinterManager.addTextAlign(1);
+        EloEpsonPrinterManager.addFeedLine(1);
+
+        EloEpsonPrinterManager.addText(
+            'THE STORE\n' +
+            'John Smith\n\n'
+        );
+
+        EloEpsonPrinterManager.addText(
+            'Coffee      2.50\n' +
+            'Sandwich    5.99\n' +
+            'Water       1.50\n'
+        );
+
+        EloEpsonPrinterManager.addTextSize(2,2);
+
+        EloEpsonPrinterManager.addText(
+            'TOTAL 9.99\n'
+        );
+
+        EloEpsonPrinterManager.addTextSize(1,1);
+        EloEpsonPrinterManager.addFeedLine(2);
+
+        EloEpsonPrinterManager.addBarcode(
+            '01209457',
+            6,
+            2,
+            0,
+            2,
+            100
+        );
+
+        EloEpsonPrinterManager.addCut(1);
+
+        const result =
+            EloEpsonPrinterManager
+                .sendData();
+
+        writeLog(
+            'Receipt Result = ' + result
+        );
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+async function printImage() {
+
+    try {
+
+        writeLog(
+            'Loading images/logo.png'
+        );
+
+        const response =
+            await fetch(
+                'images/logo.png'
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                'logo.png not found'
+            );
+        }
+
+        const buffer =
+            await response.arrayBuffer();
+
+        const imageBytes =
+            new Uint8Array(buffer);
+
+        const result =
+            EloEpsonPrinterManager
+                .printImage(imageBytes);
+
+        writeLog(
+            'Image Result = ' + result
+        );
+
+    } catch (ex) {
+
+        writeLog(
+            'Image Error = ' + ex
+        );
+    }
+}
+
+function checkPrinterPaper() {
+
+    try {
+
+        const result =
+            EloEpsonPrinterManager
+                .checkPrinterPaper();
+
+        writeLog(
+            'Paper Status = ' + result
+        );
+
+    } catch (ex) {
+
+        writeLog(ex);
+    }
+}
+
+</script>
+</body>
+</html>
