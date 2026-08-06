@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Epson Printer Test</title>
+<title>Epson Printer</title>
 
 <style>
 
 body{
     font-family:Arial,sans-serif;
-    background:#f4f4f4;
+    background:#f5f5f5;
     margin:20px;
 }
 
@@ -20,7 +20,7 @@ body{
 }
 
 button{
-    padding:10px 15px;
+    padding:10px;
     margin:4px;
 }
 
@@ -31,25 +31,16 @@ input{
 }
 
 #status{
+    background:#e9ecef;
     padding:10px;
+    border-radius:4px;
     font-weight:bold;
-    border-radius:5px;
-    margin-bottom:15px;
-}
-
-.connected{
-    background:#d4edda;
-    color:#155724;
-}
-
-.disconnected{
-    background:#f8d7da;
-    color:#721c24;
+    margin-bottom:10px;
 }
 
 #logWindow{
     width:100%;
-    height:300px;
+    height:250px;
     font-family:Consolas,monospace;
 }
 
@@ -62,44 +53,59 @@ input{
 
 <h2>Epson Printer Manager</h2>
 
-<div id="status" class="disconnected">
-Printer Status : Unknown
+<div id="status">
+Waiting for Epson Manager...
 </div>
 
-<label>Printer</label>
-<input id="printerInput" placeholder="Printer name">
+<label>Printer List</label>
+<input id="printerInput" readonly>
 
 <label>Barcode</label>
 <input id="barcodeInput" value="1234567890">
 
-<h3>Printer Management</h3>
+<hr>
 
-<button onclick="initPrinter()">Initialize</button>
-<button onclick="updatePrinterList()">Update Printer List</button>
-<button onclick="queryPrinterList()">Query Printer List</button>
-<button onclick="connectPrinter()">Connect</button>
-<button onclick="disconnectPrinter()">Disconnect</button>
-<button onclick="checkPrinterStatus()">Status</button>
+<button onclick="initializePrinter()">
+Initialize
+</button>
+
+<button onclick="queryPrinterList()">
+Query Printers
+</button>
+
+<button onclick="connectPrinter()">
+Connect
+</button>
+
+<button onclick="disconnectPrinter()">
+Disconnect
+</button>
+
+<button onclick="updateStatus()">
+Status
+</button>
 
 <hr>
 
-<h3>Printing</h3>
+<button onclick="printBarcode()">
+Print Barcode
+</button>
 
-<button onclick="printBarcode()">Print Barcode</button>
-<button onclick="printDemoReceipt()">Print Demo Receipt</button>
-<button onclick="printImage()">Print Logo Image</button>
-<button onclick="checkPrinterPaper()">Check Paper</button>
+<button onclick="printDemoReceipt()">
+Print Demo Receipt
+</button>
+
+<button onclick="printImage()">
+Print Logo
+</button>
+
+<button onclick="checkPrinterPaper()">
+Check Paper
+</button>
 
 <hr>
 
-<h3>Cash Drawer</h3>
-
-<button onclick="openDrawer()">Open Drawer</button>
-<button onclick="getDrawerStatus()">Drawer Status</button>
-
-<hr>
-
-<h3>Logs</h3>
+<h3>Log</h3>
 
 <textarea id="logWindow" readonly></textarea>
 
@@ -107,174 +113,148 @@ Printer Status : Unknown
 
 <script>
 
-//////////////////////////////////////////////////////
-// LOGGING
-//////////////////////////////////////////////////////
+function log(message){
 
-function writeLog(msg){
-
-    const ts =
-        new Date().toLocaleTimeString();
-
-    const log =
+    const area =
         document.getElementById("logWindow");
 
-    log.value += "[" + ts + "] " + msg + "\n";
+    const timestamp =
+        new Date().toLocaleTimeString();
 
-    log.scrollTop =
-        log.scrollHeight;
+    area.value +=
+        "[" + timestamp + "] " +
+        message + "\n";
+
+    area.scrollTop =
+        area.scrollHeight;
 }
 
-window.onerror=function(msg,url,line,col,error){
+window.onerror = function(msg){
 
-    writeLog(
-        "JS ERROR: " + msg
-    );
+    log("JS ERROR: " + msg);
 
     return false;
 };
 
-//////////////////////////////////////////////////////
-// STATUS
-//////////////////////////////////////////////////////
-
-function setStatus(connected){
-
-    const status =
-        document.getElementById("status");
-
-    if(connected){
-
-        status.className="connected";
-        status.innerHTML=
-            "Printer Status : CONNECTED";
-
-    }else{
-
-        status.className="disconnected";
-        status.innerHTML=
-            "Printer Status : DISCONNECTED";
-    }
-}
-
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
 // INITIALIZE
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
 
-function initPrinter(){
-
-    try{
-
-        writeLog(
-            "Initializing Epson..."
-        );
-
-        EloEpsonPrinterManager
-            .initEpsonPrinter();
-
-        checkPrinterStatus();
-
-    }catch(ex){
-
-        writeLog(
-            "Init Error: " + ex
-        );
-    }
-}
-
-//////////////////////////////////////////////////////
-// PRINTER LIST
-//////////////////////////////////////////////////////
-
-function updatePrinterList(){
+function initializePrinter(){
 
     try{
 
-        const result =
-            EloEpsonPrinterManager
-                .updatePrinterList();
+        log("Initializing Epson Manager");
 
-        writeLog(
-            "Update Result: " +
-            result
+        EloEpsonPrinterManager.initialize(
+            "onEpsonPrinterManagerReady"
         );
 
     }catch(ex){
 
-        writeLog(ex);
+        log("Initialize Error: " + ex);
     }
 }
+
+function onEpsonPrinterManagerReady(){
+
+    log("Epson Manager Ready");
+
+    queryPrinterList();
+
+    updateStatus();
+}
+
+//////////////////////////////////////////////////
+// QUERY
+//////////////////////////////////////////////////
 
 function queryPrinterList(){
 
     try{
 
-        const result =
+        EloEpsonPrinterManager
+            .updatePrinterList();
+
+        const printers =
             EloEpsonPrinterManager
                 .queryPrinterList();
 
-        writeLog(
-            "Printers: " +
-            result
-        );
+        document.getElementById(
+            "printerInput"
+        ).value = printers;
 
-        if(result){
-
-            document.getElementById(
-                "printerInput"
-            ).value=result;
-        }
+        log("Printers: " + printers);
 
     }catch(ex){
 
-        writeLog(ex);
+        log("Query Error: " + ex);
     }
 }
 
-//////////////////////////////////////////////////////
-// CONNECT
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// CONNECT FIRST PRINTER
+//////////////////////////////////////////////////
 
 function connectPrinter(){
 
     try{
 
-        let printer =
-            document.getElementById(
-                "printerInput"
-            ).value;
+        let printers =
+            EloEpsonPrinterManager
+                .queryPrinterList();
 
-        if(
-            printer.length > 1 &&
-            printer.startsWith("[") &&
-            printer.endsWith("]")
-        ){
-            printer =
-                printer.slice(1,-1)
-                       .split(",")[0];
+        if(!printers){
+
+            log("No printers found");
+            return;
         }
 
-        writeLog(
-            "Connecting to " +
-            printer
+        let firstPrinter =
+            printers;
+
+        if(
+            firstPrinter.startsWith("[") &&
+            firstPrinter.endsWith("]")
+        ){
+
+            firstPrinter =
+                firstPrinter
+                    .slice(1,-1)
+                    .split(",")[0]
+                    .trim();
+        }
+
+        log(
+            "Connecting to: " +
+            firstPrinter
         );
 
         const result =
             EloEpsonPrinterManager
-                .connectPrinter(printer);
+                .connectPrinter(
+                    firstPrinter
+                );
 
-        writeLog(
+        log(
             "Connect Result: " +
             result
         );
 
-        checkPrinterStatus();
+        updateStatus();
 
     }catch(ex){
 
-        writeLog(ex);
+        log(
+            "Connect Error: " +
+            ex
+        );
     }
 }
+
+//////////////////////////////////////////////////
+// DISCONNECT
+//////////////////////////////////////////////////
 
 function disconnectPrinter(){
 
@@ -284,24 +264,27 @@ function disconnectPrinter(){
             EloEpsonPrinterManager
                 .disconnectPrinter();
 
-        writeLog(
+        log(
             "Disconnect Result: " +
             result
         );
 
-        checkPrinterStatus();
+        updateStatus();
 
     }catch(ex){
 
-        writeLog(ex);
+        log(
+            "Disconnect Error: " +
+            ex
+        );
     }
 }
 
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
 // STATUS
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
 
-function checkPrinterStatus(){
+function updateStatus(){
 
     try{
 
@@ -309,65 +292,67 @@ function checkPrinterStatus(){
             EloEpsonPrinterManager
                 .isPrinterConnected();
 
-        setStatus(
+        document.getElementById(
+            "status"
+        ).innerHTML =
             connected
-        );
+            ? "Printer Connected"
+            : "Printer Disconnected";
 
-        writeLog(
+        log(
             "Connected = " +
             connected
         );
 
     }catch(ex){
 
-        writeLog(ex);
+        log(
+            "Status Error: " +
+            ex
+        );
     }
 }
 
-//////////////////////////////////////////////////////
-// PRINT BARCODE
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// BARCODE
+//////////////////////////////////////////////////
 
 function printBarcode(){
 
     try{
 
-        let barcode =
+        const barcode =
             document.getElementById(
                 "barcodeInput"
             ).value;
 
-        if(!barcode){
-
-            barcode="1234567890";
-        }
-
         const result =
             EloEpsonPrinterManager
-                .printBarcode(barcode);
+                .printBarcode(
+                    barcode
+                );
 
-        writeLog(
+        log(
             "Barcode Result: " +
             result
         );
 
     }catch(ex){
 
-        writeLog(ex);
+        log(
+            "Barcode Error: " +
+            ex
+        );
     }
 }
 
-//////////////////////////////////////////////////////
-// PRINT RECEIPT
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// RECEIPT
+//////////////////////////////////////////////////
 
 function printDemoReceipt(){
 
     try{
-
-        writeLog(
-            "Printing receipt..."
-        );
 
         EloEpsonPrinterManager
             .addTextAlign(1);
@@ -377,230 +362,19 @@ function printDemoReceipt(){
 
         EloEpsonPrinterManager
             .addText(
-                "DEMO STORE\n" +
+                "DEMO STORE\n"
+            );
+
+        EloEpsonPrinterManager
+            .addText(
                 "Brussels\n\n"
             );
 
         EloEpsonPrinterManager
             .addText(
-                "Coffee       2.50\n" +
-                "Sandwich     5.99\n" +
-                "Water        1.50\n" +
-                "-------------------\n"
+                "Coffee       2.50\n"
             );
-
-        EloEpsonPrinterManager
-            .addTextSize(2,2);
 
         EloEpsonPrinterManager
             .addText(
-                "TOTAL 9.99\n"
-            );
-
-        EloEpsonPrinterManager
-            .addTextSize(1,1);
-
-        EloEpsonPrinterManager
-            .addFeedLine(2);
-
-        EloEpsonPrinterManager
-            .addCut(1);
-
-        const result =
-            EloEpsonPrinterManager
-                .sendData();
-
-        writeLog(
-            "Receipt Result: " +
-            result
-        );
-
-    }catch(ex){
-
-        writeLog(
-            "Receipt Error: " +
-            ex
-        );
-    }
-}
-
-//////////////////////////////////////////////////////
-// PRINT IMAGE
-//////////////////////////////////////////////////////
-
-async function printImage(){
-
-    try{
-
-        writeLog(
-            "Loading logo.png..."
-        );
-
-        const response =
-            await fetch(
-                "logo.png"
-            );
-
-        if(!response.ok){
-
-            throw new Error(
-                "logo.png not found"
-            );
-        }
-
-        const buffer =
-            await response.arrayBuffer();
-
-        const imageBytes =
-            new Uint8Array(buffer);
-
-        writeLog(
-            "PNG Size: " +
-            imageBytes.length +
-            " bytes"
-        );
-
-        const result =
-            EloEpsonPrinterManager
-                .printImage(
-                    imageBytes
-                );
-
-        writeLog(
-            "Image Result: " +
-            result
-        );
-
-    }catch(ex){
-
-        writeLog(
-            "Image Error: " +
-            ex.message
-        );
-    }
-}
-
-//////////////////////////////////////////////////////
-// PAPER STATUS
-//////////////////////////////////////////////////////
-
-function checkPrinterPaper(){
-
-    try{
-
-        const result =
-            EloEpsonPrinterManager
-                .checkPrinterPaper();
-
-        writeLog(
-            "Paper Status: " +
-            result
-        );
-
-    }catch(ex){
-
-        writeLog(ex);
-    }
-}
-
-//////////////////////////////////////////////////////
-// CASH DRAWER
-//////////////////////////////////////////////////////
-
-function openDrawer(){
-
-    try{
-
-        const pulse =
-            EloEpsonPrinterManager
-                .addPulse(0,0);
-
-        writeLog(
-            "Pulse Result: " +
-            pulse
-        );
-
-        if(pulse){
-
-            const send =
-                EloEpsonPrinterManager
-                    .sendData();
-
-            writeLog(
-                "SendData Result: " +
-                send
-            );
-        }
-
-    }catch(ex){
-
-        writeLog(ex);
-    }
-}
-
-function getDrawerStatus(){
-
-    try{
-
-        const result =
-            EloEpsonPrinterManager
-                .getDrawerStatus();
-
-        if(result === 0){
-
-            writeLog(
-                "Drawer OPEN"
-            );
-
-        }else if(result === 1){
-
-            writeLog(
-                "Drawer CLOSED"
-            );
-
-        }else{
-
-            writeLog(
-                "Drawer UNKNOWN"
-            );
-        }
-
-    }catch(ex){
-
-        writeLog(ex);
-    }
-}
-
-//////////////////////////////////////////////////////
-// STARTUP
-//////////////////////////////////////////////////////
-
-window.onload=function(){
-
-    writeLog(
-        "Page Loaded"
-    );
-
-    if(
-        typeof EloEpsonPrinterManager
-        !== "undefined"
-    ){
-
-        writeLog(
-            "Epson Manager Found"
-        );
-
-        initPrinter();
-
-    }else{
-
-        writeLog(
-            "ERROR: EloEpsonPrinterManager not available"
-        );
-    }
-};
-
-</script>
-
-</body>
-</html>
+                "Water 
