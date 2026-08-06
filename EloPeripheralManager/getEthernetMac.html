@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PeripheralManager getEthernetMAC</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        #macAddress {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        #logWindow {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            background: #f8f8f8;
+            height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>PeripheralManager getEthernetMAC</h2>
+
+<div id="status">Initializing...</div>
+
+<button id="btnGetEthernetMac">
+    Get Ethernet MAC
+</button>
+
+<div id="macAddress">
+    MAC Address: -
+</div>
+
+<h3>Logs</h3>
+
+<div id="logWindow"></div>
+
+<script>
+
+function log(message) {
+    const logWindow = document.getElementById("logWindow");
+
+    const timestamp = new Date().toLocaleTimeString();
+
+    logWindow.innerHTML +=
+        "[" + timestamp + "] " + message + "<br>";
+
+    logWindow.scrollTop = logWindow.scrollHeight;
+}
+
+window.onload = function () {
+
+    log("Page loaded");
+
+    try {
+        EloPeripheralManager.initialize("onPeripheralManagerReady");
+        log("Initializing EloPeripheralManager...");
+    }
+    catch (error) {
+        log("ERROR: EloPeripheralManager not available.");
+        document.getElementById("status").innerHTML =
+            '<span class="error">Peripheral Manager unavailable</span>';
+    }
+};
+
+function onPeripheralManagerReady(serviceBound) {
+
+    log("onPeripheralManagerReady: " + serviceBound);
+
+    if (serviceBound === "true") {
+
+        document.getElementById("status").innerHTML =
+            '<span class="success">Peripheral Manager Connected</span>';
+
+        log("Peripheral Manager initialized successfully.");
+    }
+    else {
+
+        document.getElementById("status").innerHTML =
+            '<span class="error">Peripheral Manager not connected</span>';
+
+        log("Peripheral Manager initialization failed.");
+    }
+}
+
+document.getElementById("btnGetEthernetMac")
+    .addEventListener("click", getEthernetMac);
+
+function getEthernetMac() {
+
+    try {
+
+        log("Requesting Ethernet MAC address...");
+
+        const mac = EloPeripheralManager.getEthernetMac();
+
+        document.getElementById("macAddress").innerHTML =
+            "MAC Address: " + mac;
+
+        log("Ethernet MAC retrieved: " + mac);
+    }
+    catch (error) {
+
+        log("ERROR retrieving Ethernet MAC: " + error);
+
+        document.getElementById("macAddress").innerHTML =
+            "MAC Address: ERROR";
+    }
+}
+
+</script>
+
+</body>
+</html>
